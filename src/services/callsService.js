@@ -52,7 +52,21 @@ const joinCall = async function(token, flags, silent) {
 		console.debug('Error while joining call: ', error)
 	}
 }
-
+// Get bbb html5client
+const joinCallBbb = async function(token, flags) {
+	const response = await axios.post(generateOcsUrl('apps/spreed/api/v4/callbbb/{token}', { token }), { flags })
+	return response.data.ocs.data
+}
+// Leave call directly
+const leaveCallBbb = async function(token, all = false) {
+	const response = await axios.delete(generateOcsUrl('apps/spreed/api/v4/call/{token}', { token }))
+	return response
+}
+// Get bbb plugin availability
+const getBbbStatus = async function(token) {
+	 const response = await axios.get(generateOcsUrl('apps/spreed/api/v4/callbbb/{token}', { token }))
+	 return response.data.ocs.data
+}
 /**
  * Leave a call as participant
  *
@@ -76,4 +90,7 @@ export {
 	joinCall,
 	leaveCall,
 	fetchPeers,
+	joinCallBbb,
+	leaveCallBbb,
+	getBbbStatus,
 }

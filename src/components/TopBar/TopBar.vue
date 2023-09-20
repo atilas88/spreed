@@ -21,7 +21,8 @@
 
 <template>
 	<div class="top-bar" :class="{ 'in-call': isInCall }">
-		<ConversationIcon :key="conversation.token"
+		<ConversationIcon v-if="!isTopbarHide"
+			:key="conversation.token"
 			class="conversation-icon"
 			:offline="isPeerOffline"
 			:item="conversation"
@@ -29,7 +30,8 @@
 			:hide-favorite="false"
 			:hide-call="false" />
 		<!-- conversation header -->
-		<a role="button"
+		<a v-if="!isTopbarHide"
+			role="button"
 			class="conversation-header"
 			@click="openConversationSettings">
 			<div class="conversation-header__text"
@@ -56,12 +58,12 @@
 		</a>
 
 		<!-- Call time -->
-		<CallTime v-if="isInCall"
+		<CallTime v-if="isInCall && !isTopbarHide"
 			:start="conversation.callStartTime"
 			class="top-bar__button dark-hover" />
 
 		<!-- Participants counter -->
-		<NcButton v-if="isInCall && !isOneToOneConversation && isModeratorOrUser"
+		<NcButton v-if="isInCall && !isOneToOneConversation && isModeratorOrUser && !isTopbarHide"
 			:title="participantsInCallAriaLabel"
 			:aria-label="participantsInCallAriaLabel"
 			class="top-bar__button dark-hover"
@@ -75,14 +77,14 @@
 		</NcButton>
 
 		<!-- Reactions menu -->
-		<ReactionMenu v-if="hasReactionSupport"
+		<ReactionMenu v-if="hasReactionSupport && !isTopbarHide"
 			class="top-bar__button dark-hover"
 			:token="token"
 			:supported-reactions="supportedReactions"
 			:local-call-participant-model="localCallParticipantModel" />
 
 		<!-- Local media controls -->
-		<TopBarMediaControls v-if="isInCall"
+		<TopBarMediaControls v-if="isInCall && !isTopbarHide"
 			class="local-media-controls dark-hover"
 			:token="token"
 			:model="localMediaModel"
@@ -91,7 +93,8 @@
 			:local-call-participant-model="localCallParticipantModel" />
 
 		<!-- TopBar menu -->
-		<TopBarMenu :token="token"
+		<TopBarMenu v-if="!isTopbarHide"
+			:token="token"
 			class="top-bar__button dark-hover"
 			:show-actions="!isSidebar"
 			:is-sidebar="isSidebar"
@@ -101,7 +104,7 @@
 		<CallButton class="top-bar__button" />
 
 		<!-- sidebar toggle -->
-		<template v-if="showOpenSidebarButton">
+		<template v-if="showOpenSidebarButton && !isTopbarHide">
 			<!-- in chat: open last tab -->
 			<NcButton v-if="!isInCall"
 				:aria-label="t('spreed', 'Open sidebar')"
@@ -148,7 +151,7 @@ import MessageText from 'vue-material-design-icons/MessageText.vue'
 
 import { getCapabilities } from '@nextcloud/capabilities'
 import { showMessage } from '@nextcloud/dialogs'
-import { emit } from '@nextcloud/event-bus'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcCounterBubble from '@nextcloud/vue/dist/Components/NcCounterBubble.js'
@@ -313,6 +316,9 @@ export default {
 		hasReactionSupport() {
 			return this.isInCall && this.supportedReactions?.length > 0
 		},
+		isTopbarHide() {
+		 return this.$store.getters.getTopbarStatus
+		},
 	},
 
 	watch: {
@@ -351,6 +357,8 @@ export default {
 		document.addEventListener('mozfullscreenchange', this.fullScreenChanged, false)
 		document.addEventListener('MSFullscreenChange', this.fullScreenChanged, false)
 		document.addEventListener('webkitfullscreenchange', this.fullScreenChanged, false)
+		subscribe('top-bar:hide', this.handleHide)
+		subscribe('top-bar:show', this.handleShow)
 	},
 
 	beforeDestroy() {
@@ -360,6 +368,8 @@ export default {
 		document.removeEventListener('MSFullscreenChange', this.fullScreenChanged, false)
 		document.removeEventListener('webkitfullscreenchange', this.fullScreenChanged, false)
 		document.body.classList.remove('has-topbar')
+		unsubscribe('top-bar:hide', this.handleHide)
+		unsubscribe('top-bar:show', this.handleShow)
 	},
 
 	methods: {
@@ -383,6 +393,12 @@ export default {
 
 		openConversationSettings() {
 			emit('show-conversation-settings', { token: this.token })
+		},
+		handleHide() {
+			this.$store.dispatch('hideTopbar')
+		},
+		handleShow() {
+			this.$store.dispatch('showTopbar')
 		},
 	},
 }

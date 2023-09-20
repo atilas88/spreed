@@ -20,7 +20,9 @@
 -->
 
 <template>
-	<NcAppNavigation ref="leftSidebar" :aria-label="t('spreed', 'Conversation list')">
+	<NcAppNavigation v-if="!isTopbarHide"
+		ref="leftSidebar"
+		:aria-label="t('spreed', 'Conversation list')">
 		<div class="new-conversation"
 			:class="{ 'new-conversation--scrolled-down': !isScrolledToTop }">
 			<div class="conversations-search"
@@ -428,6 +430,9 @@ export default {
 						: t('spreed', 'Other sources')
 				}
 			}
+		},
+		isTopbarHide() {
+			return this.$store.getters.getTopbarStatus
 		},
 	},
 

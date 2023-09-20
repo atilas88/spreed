@@ -32,7 +32,7 @@
 			}"
 			:disabled="startCallButtonDisabled || loading || blockCalls"
 			:type="startCallButtonType"
-			@click="handleClick">
+			@click="executeClick">
 			<template #icon>
 				<VideoIcon :size="20" />
 			</template>
@@ -270,6 +270,9 @@ export default {
 		isBreakoutRoom() {
 			return this.conversation.objectType === 'room'
 		},
+		isBbbEnable() {
+			return this.$store.getters.getBbbStatus
+		},
 	},
 
 	mounted() {
@@ -308,13 +311,43 @@ export default {
 			this.loading = false
 		},
 
+		async joinCallBbb() {
+			let flags = PARTICIPANT.CALL_FLAG.IN_CALL
+			if (this.conversation.permissions & PARTICIPANT.PERMISSIONS.PUBLISH_AUDIO) {
+				flags |= PARTICIPANT.CALL_FLAG.WITH_AUDIO
+			}
+			if (this.conversation.permissions & PARTICIPANT.PERMISSIONS.PUBLISH_VIDEO) {
+				flags |= PARTICIPANT.CALL_FLAG.WITH_VIDEO
+			}
+
+			console.info('Joining call bbb')
+			this.loading = true
+			// Close navigation
+			emit('toggle-navigation', {
+				open: false,
+			})
+			// Close Right side bar
+			emit('right-side-bar:close')
+			// Hide top bar icons
+			emit('top-bar:hide')
+			await this.$store.dispatch('joinCallBbb', {
+				token: this.token,
+				participantIdentifier: this.$store.getters.getParticipantIdentifier(),
+				flags,
+			})
+			this.loading = false
+		},
+
 		async leaveCall(endMeetingForAll = false) {
 			if (endMeetingForAll) {
 				console.info('End meeting for everyone')
 			} else {
 				console.info('Leaving call')
 			}
-
+			// Show top bar icons
+			if (this.isBbbEnable) {
+			emit('top-bar:show')
+			}
 			// Remove selected participant
 			this.$store.dispatch('selectedVideoPeerId', null)
 			this.loading = true
@@ -351,6 +384,13 @@ export default {
 			EventBus.$emit('switch-to-conversation', {
 				token: parentRoomToken,
 			})
+		},
+		executeClick() {
+			 if (this.isBbbEnable) {
+			  this.joinCallBbb()
+			} else {
+			  this.handleClick()
+			 }
 		},
 	},
 }

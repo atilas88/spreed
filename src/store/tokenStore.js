@@ -32,6 +32,7 @@ const state = {
 	 * A in the signaling server.
 	 */
 	lastJoinedConversationToken: '',
+	callUrl: null,
 }
 
 const getters = {
@@ -46,6 +47,9 @@ const getters = {
 	},
 	currentConversationIsJoined: (state) => {
 		return state.lastJoinedConversationToken === state.token
+	},
+	getCallUrl: (state) => () => {
+		return state.callUrl
 	},
 }
 
@@ -86,6 +90,9 @@ const mutations = {
 	updateLastJoinedConversationToken(state, { token }) {
 		state.lastJoinedConversationToken = token
 	},
+	updateCallUrl(state, newCallUrl) {
+		state.callUrl = newCallUrl !== '' ? newCallUrl : null
+	},
 }
 
 const actions = {
@@ -124,6 +131,9 @@ const actions = {
 
 	updateLastJoinedConversationToken({ commit }, token) {
 		commit('updateLastJoinedConversationToken', { token })
+	},
+	updateCallUrl(context, newCallUrl) {
+		context.commit('updateCallUrl', newCallUrl)
 	},
 }
 

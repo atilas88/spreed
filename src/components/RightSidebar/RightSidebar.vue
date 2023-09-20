@@ -341,10 +341,12 @@ export default {
 
 	mounted() {
 		subscribe('spreed:select-active-sidebar-tab', this.handleUpdateActive)
+		subscribe('right-side-bar:close', this.handleClose)
 	},
 
 	beforeDestroy() {
 		unsubscribe('spreed:select-active-sidebar-tab', this.handleUpdateActive)
+		unsubscribe('right-side-bar:close', this.handleClose)
 	},
 
 	methods: {

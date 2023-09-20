@@ -34,6 +34,10 @@ return [
 		['name' => 'Call#getPeersForCall', 'url' => '/api/{apiVersion}/call/{token}', 'verb' => 'GET', 'requirements' => $requirements],
 		/** @see \OCA\Talk\Controller\CallController::joinCall() */
 		['name' => 'Call#joinCall', 'url' => '/api/{apiVersion}/call/{token}', 'verb' => 'POST', 'requirements' => $requirements],
+		/** @see \OCA\Talk\Controller\BbbController::joinCall() */
+		['name' => 'Bbb#joinCall', 'url' => '/api/{apiVersion}/callbbb/{token}', 'verb' => 'POST', 'requirements' => $requirements],
+		/** @see \OCA\Talk\Controller\BbbController::getBbbStatus() */
+		['name' => 'Bbb#getBbbStatus', 'url' => '/api/{apiVersion}/callbbb/{token}', 'verb' => 'GET', 'requirements' => $requirements],
 		/** @see \OCA\Talk\Controller\CallController::ringAttendee() */
 		['name' => 'Call#ringAttendee', 'url' => '/api/{apiVersion}/call/{token}/ring/{attendeeId}', 'verb' => 'POST', 'requirements' => $requirements],
 		/** @see \OCA\Talk\Controller\CallController::updateCallFlags() */

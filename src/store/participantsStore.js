@@ -30,7 +30,10 @@ import { generateUrl } from '@nextcloud/router'
 import { PARTICIPANT } from '../constants.js'
 import {
 	joinCall,
+	joinCallBbb,
 	leaveCall,
+	leaveCallBbb,
+	getBbbStatus,
 } from '../services/callsService.js'
 import { EventBus } from '../services/EventBus.js'
 import {
@@ -663,6 +666,32 @@ const actions = {
 		}, 10000)
 	},
 
+	async joinCallBbb({ commit, getters }, { token, participantIdentifier, flags }) {
+		if (!participantIdentifier?.sessionId) {
+			console.error('Trying to join call without sessionId')
+			return
+		}
+
+		const attendee = getters.findParticipant(token, participantIdentifier)
+		if (!attendee) {
+			console.error('Participant not found for conversation', token, participantIdentifier)
+			return
+		}
+		commit('setInCall', {
+			token,
+			sessionId: participantIdentifier.sessionId,
+			flags,
+		})
+
+		const callUrl = await joinCallBbb(token, flags)
+		commit('updateCallUrl', callUrl)
+		const updatedData = {
+			inCall: flags,
+		}
+		commit('updateParticipant', { token, attendeeId: attendee.attendeeId, updatedData })
+
+	},
+
 	async leaveCall({ commit, getters }, { token, participantIdentifier, all = false }) {
 		if (!participantIdentifier?.sessionId) {
 			console.error('Trying to leave call without sessionId')
@@ -674,7 +703,13 @@ const actions = {
 			return
 		}
 
-		await leaveCall(token, all)
+		const bbbStatus = await getBbbStatus(token)
+		if (bbbStatus === true) {
+			await leaveCallBbb(token, all)
+			commit('updateCallUrl', null)
+		} else {
+			await leaveCall(token, all)
+		}
 
 		const updatedData = {
 			inCall: PARTICIPANT.CALL_FLAG.DISCONNECTED,

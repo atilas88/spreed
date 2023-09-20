@@ -22,6 +22,7 @@
 
 import actorStore from './actorStore.js'
 import audioRecorderStore from './audioRecorderStore.js'
+import bbbStore from './bbbStore.js'
 import breakoutRoomsStore from './breakoutRoomsStore.js'
 import callViewStore from './callViewStore.js'
 import conversationsStore from './conversationsStore.js'
@@ -38,6 +39,7 @@ import sidebarStore from './sidebarStore.js'
 import soundsStore from './soundsStore.js'
 import talkHashStore from './talkHashStore.js'
 import tokenStore from './tokenStore.js'
+import topbarStore from './topbarStore.js'
 import uiModeStore from './uiModeStore.js'
 import windowVisibilityStore from './windowVisibilityStore.js'
 
@@ -45,6 +47,7 @@ export default {
 	modules: {
 		actorStore,
 		audioRecorderStore,
+		bbbStore,
 		callViewStore,
 		conversationsStore,
 		fileUploadStore,
@@ -63,6 +66,7 @@ export default {
 		sharedItemStore,
 		pollStore,
 		breakoutRoomsStore,
+		topbarStore,
 	},
 
 	mutations: {},

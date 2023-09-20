@@ -6,7 +6,16 @@
 			<TransitionWrapper name="fade">
 				<ChatView v-if="!showChatInSidebar" />
 				<template v-else>
-					<CallView :token="token" />
+					<CallView v-if="!isBbbEnable" :token="token" />
+					<div v-else class="resp-container">
+						<iframe class="resp-iframe"
+							allow="geolocation; microphone; camera; display-capture;"
+							allowfullscreen
+							width="100%"
+							height="100%"
+							frameborder="0"
+							:src="src" />
+					</div>
 				</template>
 			</TransitionWrapper>
 		</template>
@@ -59,6 +68,12 @@ export default {
 		showChatInSidebar() {
 			return this.isInCall
 		},
+		src() {
+			return this.$store.getters.getCallUrl()
+		},
+		isBbbEnable() {
+			return this.$store.getters.getBbbStatus
+		},
 	},
 
 	watch: {
@@ -71,6 +86,11 @@ export default {
 				})
 			}
 		},
+	},
+	mounted() {
+		this.$store.dispatch('getBbbStatus', {
+			token: this.token,
+		   })
 	},
 
 }
@@ -87,5 +107,19 @@ export default {
 	flex-direction: column;
 	align-content: space-between;
 	position: relative;
+}
+.resp-container {
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+}
+.resp-iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
 }
 </style>
