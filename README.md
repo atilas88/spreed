@@ -1,3 +1,13 @@
+# Nextcloud Talk using Big Blue Button
+This work is based on [spreed-bigbluebutton](https://github.com/ramezrafla/spreed-bigbluebutton#nextcloud-talk-using-big-blue-button). This integration allow to load bbb client on an iframe on main window of Talk.
+
+# Requirements
+* This work use the [BigBlueButton plugin](https://apps.nextcloud.com/apps/bbb) for this reason it should be installed and configured
+* You should configure **Content-Security-Policy** _frame-src_ and _frame-ancestors_ with url of your bbb server on your web server
+
+# Nextcloud Talk-Bbb
+![](https://raw.githubusercontent.com/atilas88/spreed/talk-bbb-integration/docs/talk-bbb-integration.png)
+
 # Nextcloud Talk
 
 **A video & audio conferencing app for Nextcloud**
