@@ -76,6 +76,10 @@ class BbbService{
 		$createMeetingParams = new CreateMeetingParameters($room->getToken(),$room->getName());
 		$createMeetingParams->setAttendeePW('IAmAnAttendee');
 		$createMeetingParams->setModeratorPW('IAmAModerator');
+		// set recording
+		$createMeetingParams->setRecord(true);
+		$createMeetingParams->setAllowStartStopRecording(true);
+		// set recording
 		return $createMeetingParams;
 	}
 
