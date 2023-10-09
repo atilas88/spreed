@@ -4,6 +4,7 @@ This work is based on [spreed-bigbluebutton](https://github.com/ramezrafla/spree
 # Requirements
 * This work use the [BigBlueButton plugin](https://apps.nextcloud.com/apps/bbb) for this reason it should be installed and configured
 * You should configure **Content-Security-Policy** _frame-src_ and _frame-ancestors_ with url of your bbb server on your web server
+* You should configure **Permissions-Policy** to allow _camera_, _microphone_ and _display-capture_ otherwise it will not work for **Edge** an **Chrome** browsers
 
 # Warning ⚠ 
 For security reasons **nextcloud** and **bbb** servers should be on same domain, because most modern browsers apply the same-origin policy. If **nextcloud** and **bbb** servers are in different domains the integration only works for **Mozilla Firefox**.
