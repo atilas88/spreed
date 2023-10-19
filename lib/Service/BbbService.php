@@ -73,9 +73,30 @@ class BbbService{
     }
 
 	private function buildMeetingParams($room): CreateMeetingParameters {
-		$createMeetingParams = new CreateMeetingParameters($room->getToken(),$room->getName());
+		$participant_in_call = $this->participantService->getParticipantsForRoom($room);
+		$room_name = "";
+		if($room->getType() == 1)
+		{
+			$room_name.="[ ";
+			foreach($participant_in_call as $participant)
+			{
+				$room_name.=$participant->getAttendee()->getDisplayName()." , ";
+			}
+			$room_name.=" ]";
+			// remove last comma
+			$pos_last_comma = strrpos($room_name,",");
+			$room_name = substr_replace($room_name," ]",$pos_last_comma,strlen($room_name));
+		}
+		else{
+			$room_name = $room->getName();
+		}
+		$createMeetingParams = new CreateMeetingParameters($room->getToken(),$room_name);
 		$createMeetingParams->setAttendeePW('IAmAnAttendee');
 		$createMeetingParams->setModeratorPW('IAmAModerator');
+		// set recording
+		$createMeetingParams->setRecord(true);
+		$createMeetingParams->setAllowStartStopRecording(true);
+		// set recording
 		return $createMeetingParams;
 	}
 
