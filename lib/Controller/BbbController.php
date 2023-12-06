@@ -8,6 +8,7 @@ use OCA\Talk\Middleware\Attribute\RequireModeratorOrNoLobby;
 use OCA\Talk\Middleware\Attribute\RequireParticipant;
 use OCA\Talk\Middleware\Attribute\RequireReadWriteConversation;
 use OCP\AppFramework\Http\Attribute\PublicPage;
+
 use OCP\AppFramework\Http\DataResponse;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -16,21 +17,24 @@ use OCA\Talk\Service\BbbService;
 use OCP\App\IAppManager;
 
 
+
 class BbbController extends AEnvironmentAwareController {
 
-    /**@var BbbService**/
-    private $bbb_service;
+	/**@var BbbService**/
+	private $bbb_service;
 	/**@var IAppManager**/
 	private $appManager;
 
-    public function __construct(
+
+	public function __construct(
 		string $appName,
 		IRequest $request,
-        BbbService $bbb_service,
+		BbbService $bbb_service,
 		IAppManager $appManager
+
 	) {
 		parent::__construct($appName, $request);
-        $this->bbb_service = $bbb_service;
+		$this->bbb_service = $bbb_service;
 		$this->appManager = $appManager;
 	}
 
@@ -40,7 +44,7 @@ class BbbController extends AEnvironmentAwareController {
 	#[RequireParticipant]
 	#[RequireReadWriteConversation]
 	public function joinCall(?int $flags = null): DataResponse
-    {
+	{
 		$session = $this->participant->getSession();
 		if ($session->id === '0') {
 			return new DataResponse([], Http::STATUS_NOT_FOUND);
@@ -53,15 +57,28 @@ class BbbController extends AEnvironmentAwareController {
 		}
 		catch (\Exception $e)
 		{
-            new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+			new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
-    }
+	}
 
 	#[PublicPage]
 	public function getBbbStatus(): DataResponse
 	{
-        return new DataResponse($this->appManager->isInstalled('bbb'));
+		return new DataResponse($this->appManager->isInstalled('bbb'));
 	}
 
+	#[PublicPage]
+	#[RequireParticipant]
+	public function endCall(bool $all = false): DataResponse
+	{
+		if ($all && $this->participant->hasModeratorPermissions()) {
+			$this->bbb_service->endCallAll($this->room);
+		}
+		else
+		{
+			$this->bbb_service->leaveCall($this->room);
+		}
+		return new DataResponse();
+	}
 
 }

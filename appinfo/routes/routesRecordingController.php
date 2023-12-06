@@ -46,5 +46,10 @@ return [
 		['name' => 'Recording#notificationDismiss', 'url' => '/api/{apiVersion}/recording/{token}/notification', 'verb' => 'DELETE', 'requirements' => $requirements],
 		/** @see \OCA\Talk\Controller\RecordingController::shareToChat() */
 		['name' => 'Recording#shareToChat', 'url' => '/api/{apiVersion}/recording/{token}/share-chat', 'verb' => 'POST', 'requirements' => $requirements],
+
+	],
+	'routes' => [
+		/** Recording ready callback URL*/
+		['name' => 'BbbRecording#recordingReady', 'url' => '/bbb/{token}/recording/{mac}', 'verb' => 'POST', 'requirements' => $requirements],
 	],
 ];
