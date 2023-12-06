@@ -289,6 +289,26 @@ async function signalingJoinCall(token, flags, silent) {
 }
 
 /**
+ * Join the call for bbb
+ */
+async function signalingJoinCallBbb(token, silent) {
+	if (tokensInSignaling[token]) {
+		pendingJoinCallToken = token
+
+		setupWebRtc()
+		const _signaling = signaling
+
+		return new Promise((resolve, reject) => {
+			startedCall = resolve
+			failedToStartCall = reject
+
+			startCall(_signaling, null, silent)
+
+		})
+	}
+}
+
+/**
  * Wait until the signaling connection succeed.
  *
  * If the authentication fails an error is thrown and the waiting aborted.
@@ -420,15 +440,16 @@ async function signalingJoinCallForRecording(token, settings, internalClientAuth
  * @return {Promise<void>}
  */
 async function signalingLeaveCall(token, all = false) {
-	sentVideoQualityThrottler.destroy()
-	sentVideoQualityThrottler = null
+	if (!store.getters.getBbbStatus) {
+		sentVideoQualityThrottler.destroy()
+		sentVideoQualityThrottler = null
 
-	speakingStatusHandler.destroy()
-	speakingStatusHandler = null
+		speakingStatusHandler.destroy()
+		speakingStatusHandler = null
 
-	callAnalyzer.destroy()
-	callAnalyzer = null
-
+		callAnalyzer.destroy()
+		callAnalyzer = null
+	}
 	if (tokensInSignaling[token]) {
 		await signaling.leaveCall(token, false, all)
 	}
@@ -481,6 +502,7 @@ export {
 	signalingLeaveCall,
 	signalingLeaveConversation,
 	signalingKill,
+	signalingJoinCallBbb,
 
 	signalingSetTyping,
 }

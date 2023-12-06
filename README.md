@@ -1,5 +1,5 @@
 # Nextcloud Talk using Big Blue Button
-This work is based on [spreed-bigbluebutton](https://github.com/ramezrafla/spreed-bigbluebutton#nextcloud-talk-using-big-blue-button). This integration allow to load bbb client on an iframe on main window of Talk.
+This work is based on [spreed-bigbluebutton](https://github.com/ramezrafla/spreed-bigbluebutton#nextcloud-talk-using-big-blue-button). This integration allow to load bbb client on an iframe on main window of Talk. In addition it use the [bbb plugin](https://github.com/atilas88/cloud_bbb/tree/cloud_bbb_download_recording_integration) integrated to a recording downloader service.
 
 # Requirements
 * This work use the [BigBlueButton plugin](https://apps.nextcloud.com/apps/bbb) for this reason it should be installed and configured

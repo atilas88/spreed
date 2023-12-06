@@ -42,6 +42,7 @@ import { PARTICIPANT } from '../../constants.js'
 import store from '../../store/index.js'
 import { Sounds } from '../sounds.js'
 import SimpleWebRTC from './simplewebrtc/simplewebrtc.js'
+import { emit } from '@nextcloud/event-bus'
 
 let webrtc
 const spreedPeerConnectionTable = []
@@ -295,7 +296,7 @@ function usersChanged(signaling, newUsers, disconnectedSessionIds) {
 		// TODO(fancycode): Adjust property name of internal PHP backend to be all lowercase.
 		const sessionId = user.sessionId || user.sessionid
 		if (!sessionId || sessionId === currentSessionId || previousUsersInRoom.includes(sessionId)) {
-			if (sessionId === currentSessionId && previousUsersInRoom.includes(sessionId)) {
+			if (sessionId === currentSessionId && previousUsersInRoom.includes(sessionId) && !store.getters.getBbbStatus) {
 				Sounds.playJoin(true, newUsers.length === 1)
 			}
 			return
@@ -332,7 +333,7 @@ function usersChanged(signaling, newUsers, disconnectedSessionIds) {
 		// other one has no streams there will be no Peer for that other
 		// participant, so a null Peer needs to be explicitly set now.
 		if ((signaling.hasFeature('mcu') && user && !userHasStreams(user))
-				|| (!signaling.hasFeature('mcu') && user && !userHasStreams(user) && !webrtc.webrtc.localStreams.length)) {
+			|| (!signaling.hasFeature('mcu') && user && !userHasStreams(user) && !webrtc.webrtc.localStreams.length)) {
 			callParticipantModel.setPeer(null)
 
 			// As there is no Peer for the other participant the current state
@@ -349,7 +350,11 @@ function usersChanged(signaling, newUsers, disconnectedSessionIds) {
 			}
 		}
 
-		playJoinSound = true
+		if (!store.getters.getBbbStatus) {
+			playJoinSound = true
+		} else {
+			playJoinSound = false
+		}
 
 		const createPeer = function() {
 			const peer = webrtc.webrtc.createPeer({
@@ -435,7 +440,7 @@ function usersChanged(signaling, newUsers, disconnectedSessionIds) {
 	previousUsersInRoom = arrayDiff(previousUsersInRoom, disconnectedSessionIds)
 
 	if (selfInCall !== PARTICIPANT.CALL_FLAG.DISCONNECTED) {
-		if (playJoinSound) {
+		if (playJoinSound && !store.getters.getBbbStatus) {
 			Sounds.playJoin()
 		} else if (playLeaveSound) {
 			Sounds.playLeave(false, previousUsersInRoom.length === 0)
@@ -484,10 +489,10 @@ function usersInCallChanged(signaling, users) {
 	}
 
 	if (previousSelfInCall === PARTICIPANT.CALL_FLAG.DISCONNECTED
-		&& selfInCall !== PARTICIPANT.CALL_FLAG.DISCONNECTED) {
+		&& selfInCall !== PARTICIPANT.CALL_FLAG.DISCONNECTED && !store.getters.getBbbStatus) {
 		Sounds.playJoin(true, Object.keys(userMapping).length === 0)
 	} else if (previousSelfInCall !== PARTICIPANT.CALL_FLAG.DISCONNECTED
-		&& selfInCall === PARTICIPANT.CALL_FLAG.DISCONNECTED) {
+		&& selfInCall === PARTICIPANT.CALL_FLAG.DISCONNECTED && !store.getters.getBbbStatus) {
 		Sounds.playLeave(true)
 	}
 
@@ -500,6 +505,9 @@ function usersInCallChanged(signaling, users) {
 		&& localUserInCall) {
 		console.info('Force leaving the call for current participant')
 
+		if (store.getters.getBbbStatus) {
+			emit('top-bar:show')
+		}
 		store.dispatch('leaveCall', {
 			token: store.getters.getToken(),
 			participantIdentifier: store.getters.getParticipantIdentifier(),
@@ -623,7 +631,9 @@ export default function initWebRtc(signaling, _callParticipantCollection, _local
 		}
 
 		clearErrorNotification()
-		Sounds.playLeave(true)
+		if (!store.getters.getBbbStatus) {
+			Sounds.playLeave(true)
+		}
 
 		// The delayed connection for the own peer needs to be explicitly
 		// stopped, as the current own session is not passed along with the
@@ -781,7 +791,7 @@ export default function initWebRtc(signaling, _callParticipantCollection, _local
 				// ICE restart.
 				if (spreedPeerConnectionTable[peer.id] < 5) {
 					if (peer.pc.localDescription.type === 'offer'
-							&& peer.pc.signalingState === 'stable') {
+						&& peer.pc.signalingState === 'stable') {
 						spreedPeerConnectionTable[peer.id]++
 						console.debug('ICE restart after disconnect.', peer.id, peer)
 						peer.icerestart()
@@ -811,7 +821,7 @@ export default function initWebRtc(signaling, _callParticipantCollection, _local
 		if (!signaling.hasFeature('mcu')) {
 			if (spreedPeerConnectionTable[peer.id] < 5) {
 				if (peer.pc.localDescription.type === 'offer'
-						&& peer.pc.signalingState === 'stable') {
+					&& peer.pc.signalingState === 'stable') {
 					spreedPeerConnectionTable[peer.id]++
 					console.debug('ICE restart after failure.', peer.id, peer)
 					peer.icerestart()
@@ -849,30 +859,30 @@ export default function initWebRtc(signaling, _callParticipantCollection, _local
 			peer.emit('extendedIceConnectionStateChange', peer.pc.iceConnectionState)
 
 			switch (peer.pc.iceConnectionState) {
-			case 'checking':
-				console.debug('Connecting to peer...', peer.id, peer)
+				case 'checking':
+					console.debug('Connecting to peer...', peer.id, peer)
 
-				break
-			case 'connected':
-			case 'completed': // on caller side
-				console.debug('Connection established.', peer.id, peer)
+					break
+				case 'connected':
+				case 'completed': // on caller side
+					console.debug('Connection established.', peer.id, peer)
 
-				handleIceConnectionStateConnected(peer)
-				break
-			case 'disconnected':
-				console.debug('Disconnected.', peer.id, peer)
+					handleIceConnectionStateConnected(peer)
+					break
+				case 'disconnected':
+					console.debug('Disconnected.', peer.id, peer)
 
-				handleIceConnectionStateDisconnected(peer)
-				break
-			case 'failed':
-				console.debug('Connection failed.', peer.id, peer)
+					handleIceConnectionStateDisconnected(peer)
+					break
+				case 'failed':
+					console.debug('Connection failed.', peer.id, peer)
 
-				handleIceConnectionStateFailed(peer)
-				break
-			case 'closed':
-				console.debug('Connection closed.', peer.id, peer)
+					handleIceConnectionStateFailed(peer)
+					break
+				case 'closed':
+					console.debug('Connection closed.', peer.id, peer)
 
-				break
+					break
 			}
 		})
 	}
@@ -918,34 +928,34 @@ export default function initWebRtc(signaling, _callParticipantCollection, _local
 			peer.emit('extendedIceConnectionStateChange', peer.pc.iceConnectionState)
 
 			switch (peer.pc.iceConnectionState) {
-			case 'checking':
-				console.debug('Connecting own peer...', peer.id, peer)
+				case 'checking':
+					console.debug('Connecting own peer...', peer.id, peer)
 
-				break
-			case 'connected':
-			case 'completed':
-				console.debug('Connection established (own peer).', peer.id, peer)
+					break
+				case 'connected':
+				case 'completed':
+					console.debug('Connection established (own peer).', peer.id, peer)
 
-				break
-			case 'disconnected':
-				console.debug('Disconnected (own peer).', peer.id, peer)
+					break
+				case 'disconnected':
+					console.debug('Disconnected (own peer).', peer.id, peer)
 
-				setTimeout(function() {
-					if (peer.pc.iceConnectionState !== 'disconnected') {
-						return
-					}
+					setTimeout(function() {
+						if (peer.pc.iceConnectionState !== 'disconnected') {
+							return
+						}
 
-					peer.emit('extendedIceConnectionStateChange', 'disconnected-long')
-				}, 5000)
-				break
-			case 'failed':
-				console.debug('Connection failed (own peer).', peer.id, peer)
+						peer.emit('extendedIceConnectionStateChange', 'disconnected-long')
+					}, 5000)
+					break
+				case 'failed':
+					console.debug('Connection failed (own peer).', peer.id, peer)
 
-				break
-			case 'closed':
-				console.debug('Connection closed (own peer).', peer.id, peer)
+					break
+				case 'closed':
+					console.debug('Connection closed (own peer).', peer.id, peer)
 
-				break
+					break
 			}
 		})
 	}
@@ -1081,7 +1091,7 @@ export default function initWebRtc(signaling, _callParticipantCollection, _local
 		})
 
 		const removeSender = (hasAudioSenders && !(currentParticipant.participantPermissions & PARTICIPANT.PERMISSIONS.PUBLISH_AUDIO))
-							|| (hasVideoSenders && !(currentParticipant.participantPermissions & PARTICIPANT.PERMISSIONS.PUBLISH_VIDEO))
+			|| (hasVideoSenders && !(currentParticipant.participantPermissions & PARTICIPANT.PERMISSIONS.PUBLISH_VIDEO))
 
 		if (currentParticipant.participantPermissions & PARTICIPANT.PERMISSIONS.PUBLISH_AUDIO) {
 			webrtc.webrtc.allowAudio()

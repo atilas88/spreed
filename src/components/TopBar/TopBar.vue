@@ -20,7 +20,7 @@
 -->
 
 <template>
-	<div class="top-bar" :class="{ 'in-call': isInCall }">
+	<div class="top-bar" :class="incallObj">
 		<ConversationIcon v-if="!isTopbarHide"
 			:key="conversation.token"
 			class="conversation-icon"
@@ -319,6 +319,12 @@ export default {
 		isTopbarHide() {
 		 return this.$store.getters.getTopbarStatus
 		},
+		incallObj() {
+			return {
+				'in-call': this.isInCall && !this.isTopbarHide,
+				'in-callbbb': this.isInCall && this.isTopbarHide,
+			}
+		},
 	},
 
 	watch: {
@@ -426,6 +432,26 @@ export default {
 		position: absolute;
 		top: 0;
 		left:0;
+		background-color: transparent;
+		display: flex;
+		flex-wrap: wrap;
+		& * {
+			color: #fff;
+		}
+
+		:deep(button.dark-hover:hover),
+		.dark-hover :deep(button:hover),
+		.dark-hover :deep(.action-item--open button),
+		:deep(.action-item--open.dark-hover button) {
+			background-color: rgba(0, 0, 0, 0.2);
+		}
+	}
+
+	&.in-callbbb{
+		right: 0;
+		border: none;
+		position: absolute;
+		top: 0;
 		background-color: transparent;
 		display: flex;
 		flex-wrap: wrap;
