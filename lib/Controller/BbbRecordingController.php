@@ -52,7 +52,7 @@ class BbbRecordingController extends Controller {
         $recording_params = $this->request->post['signed_parameters'];
 
 		$moderator_mail = $this->bbb_service->findModeratorMail($recording_params);
-		if(!empty($moderator_mail))
+		if(count($moderator_mail) > 0)
 		{
 			$this->recording_service->downloadRecording($recording_params, $moderator_mail);
 		}

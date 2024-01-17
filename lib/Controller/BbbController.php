@@ -16,26 +16,31 @@ use OCA\Talk\Service\BbbService;
 
 use OCP\App\IAppManager;
 
+use OCA\BigBlueButton\Service\UserAuthService;
 
 
 class BbbController extends AEnvironmentAwareController {
 
-	/**@var BbbService**/
-	private $bbb_service;
+    /**@var BbbService**/
+    private $bbb_service;
 	/**@var IAppManager**/
 	private $appManager;
+	/**@var UserAuthService**/
+	private $userAuthService;
 
 
-	public function __construct(
+    public function __construct(
 		string $appName,
 		IRequest $request,
-		BbbService $bbb_service,
-		IAppManager $appManager
+        BbbService $bbb_service,
+		IAppManager $appManager,
+		UserAuthService $userAuthService
 
 	) {
 		parent::__construct($appName, $request);
-		$this->bbb_service = $bbb_service;
+        $this->bbb_service = $bbb_service;
 		$this->appManager = $appManager;
+		$this->userAuthService = $userAuthService;
 	}
 
 	#[PublicPage]
@@ -44,27 +49,30 @@ class BbbController extends AEnvironmentAwareController {
 	#[RequireParticipant]
 	#[RequireReadWriteConversation]
 	public function joinCall(?int $flags = null): DataResponse
-	{
+    {
 		$session = $this->participant->getSession();
 		if ($session->id === '0') {
 			return new DataResponse([], Http::STATUS_NOT_FOUND);
 		}
 		try
 		{
+			// Set user credentials...
+			$this->userAuthService->setUserCredentials();
+			// Set user credentials...
 			$creationDate = $this->bbb_service->createMeeting($this->room);
 			$bbb_url = $this->bbb_service->getJoinUrl($this->participant,$this->room,$flags,$creationDate);
 			return new DataResponse($bbb_url);
 		}
 		catch (\Exception $e)
 		{
-			new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+            new DataResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
 		}
-	}
+    }
 
 	#[PublicPage]
 	public function getBbbStatus(): DataResponse
 	{
-		return new DataResponse($this->appManager->isInstalled('bbb'));
+        return new DataResponse($this->appManager->isInstalled('bbb'));
 	}
 
 	#[PublicPage]
